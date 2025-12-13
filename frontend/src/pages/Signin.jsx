@@ -1,6 +1,7 @@
+import { useNavigate } from "react-router-dom"
 
 export default function Signin () {
-
+    const navigate = useNavigate()
     const handleLog = async (e) => {
         e.preventDefault()
         try {

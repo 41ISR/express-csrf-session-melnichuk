@@ -1,6 +1,9 @@
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 export default function Index () {
-
+    const [click, setClick] = useState(0)
+    const navigate = useNavigate()
     return (
         <div className="container">
       
@@ -8,7 +11,7 @@ export default function Index () {
                 <h1>🎮 Кликер Игра</h1>
                 <div className="user-info">
                 <span><strong>Имя пользователя</strong></span>
-                <button className="logout-btn">Выйти</button>
+                <button className="logout-btn" onClick={() => navigate("/logout")}>Выйти</button>
                 </div>
             </div>
 
@@ -20,8 +23,8 @@ export default function Index () {
                 
                 <div className="click-counter">
                 <h2>Твои клики</h2>
-                <div className="clicks-display">42</div>
-                <button className="click-button">👆 КЛИКНИ!</button>
+                <div className="clicks-display">{click}</div>
+                <button className="click-button" onClick={() => setClick((val) => val+1)}>👆 КЛИКНИ!</button>
                 </div>
 
                 <div className="leaderboard">

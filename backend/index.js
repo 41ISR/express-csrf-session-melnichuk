@@ -48,18 +48,18 @@ app.post("/signup", (req, res) => {
         res.status(201).json({message: "user success", user: newUser})
     } catch (error) {
         console.error(error);
-        res.status(401).json({error: "erroror"})
+        res.status(400).json({error: "erroror"})
     }
 })
 
 app.post("/signin", (req, res) => {
     try {
-        if(!req.body || !req.body.email || !req.body.password) return res.status(403).json({error: "not all neccesary data provided"})
+        if(!req.body.email || !req.body.password) return res.status(403).json({error: "not all neccesary data provided"})
         const query = db.prepare(`
             SELECT * FROM users WHERE email = ?`)
         const user = query.get(req.body.email)
-        if(!user) return res.status(404).json({error: "Wrong email or password"})
-        if(!bcrypt.compareSync(req.body.password, user.password)) return res.status(404).json({error: "Wrong email or password"})
+        if(!user) return res.status(401).json({error: "Wrong email or password"})
+        if(!bcrypt.compareSync(req.body.password, user.password)) return res.status(401).json({error: "Wrong email or password"})
         
         req.session.userId = user.id
         req.session.email = user.email
@@ -71,12 +71,21 @@ app.post("/signin", (req, res) => {
     }
 })
 
-app.get("/auth/me", (req, res) => {
+app.post("/logout", (req,res) => {
+    req.session.destroy((err) => {
+        err && res.status(500).json({error: "Couldn't log out :("})
+        res.clearCookie("sessionId")
+        res.status(200).json({message: "Log out successfully"})
+    })
+})
+
+app.get("/me", (req, res) => {
     console.log(req.session);
     if(req.session.userId) {
-        return res.json({loggedin: true})
+        return res.json({loggedin: true, user: {userId: req.session.userId, email: req.session.email}})
     }
     
+    return res.status(401).json({loggedin: false})
 })
 
 app.listen("3000", () => {
