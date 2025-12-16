@@ -44,6 +44,7 @@ app.post("/signup", (req, res) => {
 
         req.session.userId = newUser.id
         req.session.email = newUser.email
+        req.session.clicks = newUser.clicks
 
         res.status(201).json({message: "user success", user: newUser})
     } catch (error) {
@@ -63,6 +64,7 @@ app.post("/signin", (req, res) => {
         
         req.session.userId = user.id
         req.session.email = user.email
+        req.session.clicks = user.clicks
 
         res.status(201).json({message: "sign in success", user: user})
     } catch (error) {
@@ -80,13 +82,27 @@ app.post("/logout", (req,res) => {
 })
 
 app.get("/me", (req, res) => {
-    console.log(req.session);
-    if(req.session.userId) {
-        return res.json({loggedin: true, user: {userId: req.session.userId, email: req.session.email}})
+    // console.log(req.session);
+    if(req.session.userId) {        
+        return res.json({loggedin: true, user: {userId: req.session.userId, email: req.session.email, clicks: req.session.clicks}})
     }
     
     return res.status(401).json({loggedin: false})
 })
+
+// ----------
+
+app.post("/click", (req, res) => {
+    const {click} = req.body
+    const updClicks = db.prepare(`
+        UPDATE users SET clicks = ? WHERE id = ?`).run(click, req.session.userId)
+
+    res.status(200).json({message: "Clicked lol hahahahahaahahahahaha u're lox"})
+})
+
+
+
+
 
 app.listen("3000", () => {
     console.log("server's running on 3000");

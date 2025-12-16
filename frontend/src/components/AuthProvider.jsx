@@ -11,9 +11,9 @@ export default function AuthProvider(){
         const totya3 = async () => {
             try {
                 await checkSession()
-                setIsChecked(true)
             } catch (error) {
                 console.error(error);
+            } finally{
                 setIsChecked(true)
             }
         }
@@ -22,7 +22,7 @@ export default function AuthProvider(){
 
     useEffect(() => {
         if(!user && isChecked) navigate('/signin')
-    }, [setIsChecked, user, navigate])
+    }, [isChecked, user, navigate])
 
     if(!user || !isChecked) return <></>
 

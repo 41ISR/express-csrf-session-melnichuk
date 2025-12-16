@@ -11,9 +11,11 @@ const useSessionStore = create((set,get) => ({
                 },
                 credentials: "include"
             })
+            const res = await data.json()
+
             if(!data.ok) throw new Error(data.error)
-            if(!data.body) return
-            set((state) => ({...state, user: data.body}))
+
+            set((state) => ({...state, user: res}))            
         } catch (error) {
             console.error(error);
         }
