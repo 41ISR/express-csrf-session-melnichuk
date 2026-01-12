@@ -1,16 +1,20 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import useSessionStore from "../store/useSessionStore"
+import useAppStore from "../store/useAppStore"
+import Leaderboard from "../components/Leaderboard"
 
 export default function Index () {
     const { user } = useSessionStore()
-    const [click, setClick] = useState(0)
+    // const [click, setClick] = useState(0)
     const formRef = useRef(null)
     const navigate = useNavigate()
-    const clickRef = useRef(null)
+    // const clickRef = useRef(null)
+
+    const {currentClicks, setCurrentClicks} = useAppStore()
 
     useEffect(() => {
-        setClick(user.user.clicks)
+        setCurrentClicks(user.user.clicks)
     },[user])
     useEffect(() => {
         const interval = setInterval(() => {
@@ -19,18 +23,18 @@ export default function Index () {
         
         return () => clearInterval(interval)
     },[])
-    useEffect(() => {
-        clickRef.current = click
-    },[click])
+    // useEffect(() => {
+    //     clickRef.current = click
+    // },[click])
 
     const handleClick = () => {
-        setClick((val) => val+1)
+        setCurrentClicks(currentClicks + 1)
     }
 
     const handleSubmit = async () => {
         // console.log(clickRef);
         const clicks = {
-            click: clickRef.current
+            click: currentClicks
         }
         try {
             await fetch('https://super-invention-wrg65pj457jr3gwj-3000.app.github.dev/click',{
@@ -66,38 +70,13 @@ export default function Index () {
                 
                 <div className="click-counter">
                 <h2>Твои клики</h2>
-                <div className="clicks-display">{click}</div>
+                <div className="clicks-display">{currentClicks}</div>
                 <form action={(e) => e.preventDefault} ref={formRef}>
                     <button type="submit" className="click-button" onClick={handleClick}>👆 КЛИКНИ!</button>
                 </form>
                 </div>
 
-                <div className="leaderboard">
-                <h2>🏆 Топ-10 игроков</h2>
-                <ol>
-                    <li>
-                    <span className="rank">#1</span>
-                    <span className="username">bob</span>
-                    <span className="score">200 кликов</span>
-                    </li>
-                    <li>
-                    <span className="rank">#2</span>
-                    <span className="username">alice</span>
-                    <span className="score">150 кликов</span>
-                    </li>
-                    <li className="current-user">
-                    <span className="rank">#3</span>
-                    <span className="username">you</span>
-                    <span className="score">42 клика</span>
-                    </li>
-                    <li>
-                    <span className="rank">#4</span>
-                    <span className="username">charlie</span>
-                    <span className="score">75 кликов</span>
-                    </li>
-                </ol>
-                </div>
-
+                <Leaderboard />
             </div>
         </div>
     )
