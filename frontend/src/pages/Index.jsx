@@ -1,46 +1,44 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef} from "react"
 import { useNavigate } from "react-router-dom"
 import useSessionStore from "../store/useSessionStore"
 import useAppStore from "../store/useAppStore"
 import Leaderboard from "../components/Leaderboard"
 
 export default function Index () {
-    const { user } = useSessionStore()
-    // const [click, setClick] = useState(0)
+    const { user, csrfToken, getToken } = useSessionStore()
     const formRef = useRef(null)
     const navigate = useNavigate()
-    // const clickRef = useRef(null)
 
     const {currentClicks, setCurrentClicks} = useAppStore()
+
+    // --
 
     useEffect(() => {
         setCurrentClicks(user.user.clicks)
     },[user])
+
     useEffect(() => {
+        getToken()
         const interval = setInterval(() => {
             formRef.current && handleSubmit()
         }, 5000);        
         
         return () => clearInterval(interval)
     },[])
-    // useEffect(() => {
-    //     clickRef.current = click
-    // },[click])
+
+    // --
 
     const handleClick = () => {
         setCurrentClicks(currentClicks + 1)
     }
 
     const handleSubmit = async () => {
-        // console.log(clickRef);
-        const clicks = {
-            click: currentClicks
-        }
         try {
             await fetch('https://super-invention-wrg65pj457jr3gwj-3000.app.github.dev/click',{
-                body: JSON.stringify(clicks),
+                body: JSON.stringify({click: useAppStore.getState().currentClicks}),
                 method: "POST",
                 headers:{
+                    "X-CSRF-TOKEN": useSessionStore.getState().csrfToken,
                     "Content-Type": "application/json"
                 },
                 credentials: "include"

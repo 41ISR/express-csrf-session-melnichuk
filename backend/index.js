@@ -2,6 +2,7 @@ const cookieParser = require("cookie-parser")
 const db = require("./db")
 const express = require("express")
 const cors = require("cors")
+const csrf = require('csurf')
 const bcrypt = require("bcrypt")
 const session = require("express-session")
 
@@ -15,7 +16,7 @@ app.use(cors({
     origin: true,                               // CODESPACE ONLY
     credentials: true,
     methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", 'X-CSRF-TOKEN'],
     exposedHeaders: ["set-cookie"]
 }))
 app.use(session({
@@ -33,6 +34,18 @@ app.use(session({
     }
 }))
 
+// ----------
+
+const csrfMiddleware = csrf({
+    cookie: {
+        httpOnly: false,
+        sameSite: 'none',
+        secure: true
+    }
+})
+
+// ----------
+
 app.post("/signup", (req, res) => {
     try {
         const hashed = bcrypt.hashSync(req.body.password, 10)
@@ -46,30 +59,31 @@ app.post("/signup", (req, res) => {
         req.session.email = newUser.email
         req.session.clicks = newUser.clicks
 
-        res.status(201).json({message: "user success", user: newUser})
+        res.status(201).json({message: "Регистрация успешна", user: newUser})
     } catch (error) {
         console.error(error);
-        res.status(400).json({error: "erroror"})
+        if(error.code == 'SQLITE_CONSTRAINT_UNIQUE') return res.status(400).json({error:'Пользователь с такой почтой уже зарегистрирован'})
+        
     }
 })
 
 app.post("/signin", (req, res) => {
     try {
-        if(!req.body.email || !req.body.password) return res.status(403).json({error: "not all neccesary data provided"})
+        if(!req.body.email || !req.body.password) return res.status(403).json({error: "Заполните все поля"})
         const query = db.prepare(`
             SELECT * FROM users WHERE email = ?`)
         const user = query.get(req.body.email)
-        if(!user) return res.status(401).json({error: "Wrong email or password"})
-        if(!bcrypt.compareSync(req.body.password, user.password)) return res.status(401).json({error: "Wrong email or password"})
+        if(!user) return res.status(401).json({error: "Неверная почта или пароль"})
+        if(!bcrypt.compareSync(req.body.password, user.password)) return res.status(401).json({error: "Неверная почта или пароль"})
         
         req.session.userId = user.id
         req.session.email = user.email
         req.session.clicks = user.clicks
 
-        res.status(201).json({message: "sign in success", user: user})
+        res.status(201).json({message: "Успешный вход", user: user})
     } catch (error) {
         console.error(error);
-        res.status(401).json({error: "erroror"})
+        res.status(401).json({error: error.code})
     }
 })
 
@@ -83,8 +97,15 @@ app.post("/logout", (req,res) => {
 
 app.get("/me", (req, res) => {
     // console.log(req.session);
+
+    const {clicks} = db.prepare(`
+        SELECT clicks FROM users WHERE id = ?`).get(req.session.userId)
+
     if(req.session.userId) {        
-        return res.json({loggedin: true, user: {userId: req.session.userId, email: req.session.email, clicks: req.session.clicks}})
+        const {clicks} = db.prepare(`
+            SELECT * FROM users WHERE id = ?`).get(req.session.userId)
+
+        return res.status(200).json({loggedin: true, user: {id: req.session.userId, email: req.session.email, clicks: clicks}})
     }
     
     return res.status(401).json({loggedin: false})
@@ -92,7 +113,7 @@ app.get("/me", (req, res) => {
 
 // ----------
 
-app.post("/click", (req, res) => {
+app.post("/click", csrfMiddleware, (req, res) => {
     const {click} = req.body
     const updClicks = db.prepare(`
         UPDATE users SET clicks = ? WHERE id = ?`).run(click, req.session.userId)
@@ -100,9 +121,25 @@ app.post("/click", (req, res) => {
     res.status(200).json({message: "Clicked lol hahahahahaahahahahaha u're lox"})
 })
 
+app.get("/leaderboard", (_, res) => {
+    try {
+        const data = db.prepare(`
+            SELECT * FROM users ORDER BY clicks DESC LIMIT 10`).all()
 
+        const sanitized = data.map((el) => {
+            const {createdAt, password, ...cleanUser} = el
+            return cleanUser
+        })
 
+        res.status(200).json(sanitized)
+    } catch (error) {
+        res.status(400).json({error: 'something bad wrong'})
+    }
+})
 
+app.get('/csrf-token', csrfMiddleware, (req,res) => {
+    res.json({token: req.csrfToken()})
+})
 
 app.listen("3000", () => {
     console.log("server's running on 3000");

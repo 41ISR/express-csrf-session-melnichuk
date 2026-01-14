@@ -1,7 +1,9 @@
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
+import { useState } from "react"
 
 export default function Signup () {
     const navigate = useNavigate()
+    const [error, setError] = useState()
     const handleReg = async (e) => {
         e.preventDefault()
         try {
@@ -18,12 +20,14 @@ export default function Signup () {
                 },
                 credentials: "include"
             })
+            const dada = await res.json()
 
-            if (!res.ok) throw new Error(res.message)
+            if (!res.ok) throw new Error(dada.error)
                 
             navigate("/")
         } catch (error) {
             console.error(error);
+            setError(error.message)
         }
     }
 
@@ -43,12 +47,18 @@ export default function Signup () {
                 <form onSubmit={handleReg}>
                     <input type="text" name="email" placeholder="Имя пользователя" required />
                     <input type="password" name="password" placeholder="Пароль (мин. 6 символов)" required />
+                    
+                    {error && <p className="form-error">{error}</p>}
+                    
                     <button type="submit">Зарегистрироваться</button>
                 </form>
+                
+                <Link className='form-link' to='/signin'>Вход</Link>
                 </div>
 
                 
             </div>
+            
         </div>
     )
 }

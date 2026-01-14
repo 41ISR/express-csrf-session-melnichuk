@@ -61,6 +61,9 @@ h1 {
 }
 
 .form-card {
+  display: flex;
+  gap: 20px;
+  flex-direction: column;
   background: white;
   padding: 30px;
   border-radius: 12px;
@@ -68,6 +71,7 @@ h1 {
 }
 
 .form-card h2 {
+  align-self: center;
   color: #333;
   margin-bottom: 20px;
   font-size: 1.5em;
@@ -111,6 +115,18 @@ h1 {
 
 .form-card button:active {
   transform: translateY(0);
+}
+
+a.form-link{
+  color: #6e6e6e;
+  font-size: 1em;
+  text-decoration: none;
+  align-self: center;
+}
+
+p.form-error{
+  color: red;
+  text-align: center;
 }
 
 /* Тестовые аккаунты */

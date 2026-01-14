@@ -2,14 +2,9 @@ import { create } from "zustand"
 
 const useAppStore = create((set,get) => ({
     currentClicks: 0,
-    leaderboard: [
-        {userId: 1, email: 'ktoto@m.ru', clicks: 135},
-        {userId: 2, email: 'ktoto@m.ru', clicks: 25},
-        {userId: 3, email: 'ktoto@m.ru', clicks: 15515},
-        
-    ],
+    leaderboard: [],
     setCurrentClicks: (amount) => set((state) => ({...state, currentClicks: amount})),
-
+    setLeaderboard: (board) => set((state) => ({...state, leaderboard: board})),
 }))
 
 export default useAppStore
